@@ -1,0 +1,126 @@
+/* Add to the end of style.css */
+
+/* Track Item Advanced */
+.track-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.track-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    position: relative;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.track-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+.track-actions .icon-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.btn-mute.active { background: #ef4444; color: white; border-color: #ef4444; }
+.btn-solo.active { background: #eab308; color: white; border-color: #eab308; }
+
+#btn-loop.active { background: var(--accent-gradient); color: white; border-color: transparent; }
+
+.track-waveform-container {
+    position: relative;
+    height: 60px;
+    background: rgba(15, 23, 42, 0.5);
+    border-top: 1px solid var(--border-glass);
+    border-bottom: 1px solid var(--border-glass);
+    overflow: hidden;
+    cursor: crosshair; /* Added for scrubbing */
+}
+
+.waveform-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    background: var(--accent-secondary);
+    box-shadow: 0 0 10px var(--accent-secondary);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.track-settings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.track-setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 120px;
+}
+
+.track-setting-group label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.track-setting-group input[type=number], .track-setting-group input[type=range] {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-glass);
+    color: var(--text-primary);
+    padding: 0.4rem;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    width: 100%;
+}
+
+.track-setting-group input[type=number]:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+/* Progress Bar */
+.progress-bar-container {
+    width: 80%;
+    max-width: 400px;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-gradient);
+    transition: width 0.2s ease-out;
+}
+.hidden { display: none !important; }
+
+/* Drag & Drop */
+.drag-active {
+    border: 2px dashed var(--accent-secondary) !important;
+    background: rgba(6, 182, 212, 0.1) !important;
+}

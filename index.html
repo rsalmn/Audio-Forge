@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Forge | Premium Audio Editor</title>
+    <meta name="description" content="Edit, process, merge, and export audio with premium presets like Nightcore and Slowed.">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Audio Libs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style_advanced.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-panel main-header">
+            <div class="logo">
+                <i data-lucide="audio-lines" class="logo-icon"></i>
+                <h1>Audio Forge</h1>
+            </div>
+            <div class="header-actions">
+                <button id="btn-export-wav" class="btn primary"><i data-lucide="download"></i> Export WAV</button>
+                <button id="btn-export-mp3" class="btn secondary"><i data-lucide="file-audio"></i> Export MP3</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Left Column: Tracks -->
+            <section class="tracks-section glass-panel">
+                <div class="section-header">
+                    <h2>Tracks</h2>
+                    <label class="btn icon-btn add-track-btn" title="Add Track">
+                        <i data-lucide="plus"></i>
+                        <input type="file" id="file-upload" accept="audio/*" multiple hidden>
+                    </label>
+                </div>
+                
+                <div id="track-list" class="track-list">
+                    <!-- Tracks will be dynamically added here -->
+                    <div class="empty-state">
+                        <i data-lucide="music"></i>
+                        <p>Upload audio to start forging.</p>
+                    </div>
+                </div>
+
+                <div class="master-transport">
+                    <button id="btn-play-pause" class="btn large-play" disabled>
+                        <i data-lucide="play" id="play-icon"></i>
+                        <span id="play-text">Play All</span>
+                    </button>
+                    <button id="btn-stop" class="btn icon-btn" disabled title="Stop">
+                        <i data-lucide="square"></i>
+                    </button>
+                    <button id="btn-loop" class="btn icon-btn" title="Toggle Loop">
+                        <i data-lucide="repeat"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Right Column: Effects & Presets -->
+            <section class="effects-section">
+                <!-- Presets -->
+                <div class="presets-container glass-panel">
+                    <h2>Presets</h2>
+                    <div class="preset-grid">
+                        <button class="preset-btn" data-preset="normal">Normal</button>
+                        <button class="preset-btn" data-preset="jernih">Jernih (Clear)</button>
+                        <button class="preset-btn" data-preset="nightcore">Nightcore</button>
+                        <button class="preset-btn" data-preset="slowed">Slowed</button>
+                        <button class="preset-btn" data-preset="chipmunk">Chipmunk</button>
+                        <button class="preset-btn" data-preset="vaporwave">Vaporwave</button>
+                        <button class="preset-btn" data-preset="deep">Deep</button>
+                    </div>
+                </div>
+
+                <!-- Master FX -->
+                <div class="fx-container glass-panel">
+                    <h2>Master Processing</h2>
+                    <div class="sliders">
+                        <div class="slider-group">
+                            <label>
+                                <span><i data-lucide="activity"></i> Pitch (Semitones)</span>
+                                <span id="val-pitch" class="val-display">0</span>
+                            </label>
+                            <input type="range" id="slider-pitch" min="-24" max="24" value="0" step="1">
+                        </div>
+                        
+                        <div class="slider-group">
+                            <label>
+                                <span><i data-lucide="fast-forward"></i> Speed</span>
+                                <span id="val-speed" class="val-display">1.0x</span>
+                            </label>
+                            <input type="range" id="slider-speed" min="0.5" max="2" value="1" step="0.05">
+                        </div>
+
+                        <div class="slider-group">
+                            <label>
+                                <span><i data-lucide="speaker"></i> High (Treble)</span>
+                                <span id="val-high" class="val-display">0 dB</span>
+                            </label>
+                            <input type="range" id="slider-high" min="-20" max="20" value="0" step="1">
+                        </div>
+
+                        <div class="slider-group">
+                            <label>
+                                <span><i data-lucide="speaker"></i> Mid (Vocal)</span>
+                                <span id="val-mid" class="val-display">0 dB</span>
+                            </label>
+                            <input type="range" id="slider-mid" min="-20" max="20" value="0" step="1">
+                        </div>
+
+                        <div class="slider-group">
+                            <label>
+                                <span><i data-lucide="speaker"></i> Low (Bass)</span>
+                                <span id="val-bass" class="val-display">0 dB</span>
+                            </label>
+                            <input type="range" id="slider-bass" min="-20" max="20" value="0" step="1">
+                        </div>
+
+                        <div class="slider-group">
+                            <label>
+                                <span><i data-lucide="volume-2"></i> Master Volume</span>
+                                <span id="val-volume" class="val-display">0 dB</span>
+                            </label>
+                            <input type="range" id="slider-volume" min="-30" max="10" value="0" step="1">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p id="loading-text">Processing Audio...</p>
+            <div class="progress-bar-container hidden" id="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
