@@ -826,7 +826,7 @@ function encodeWAV(samples, format, sampleRate, numChannels, bitDepth) {
 updatePresetUI('normal');
 
 // ========================================
-// ROBLOX UPLOAD
+// ROBLOX UPLOAD (with auto-fill & history)
 // ========================================
 const btnUploadRoblox = document.getElementById('btn-upload-roblox');
 const robloxModal = document.getElementById('roblox-modal');
@@ -834,10 +834,27 @@ const modalClose = document.getElementById('modal-close');
 const btnRbxSubmit = document.getElementById('btn-rbx-submit');
 const rbxStatus = document.getElementById('rbx-status');
 
+// Auto-fill Roblox fields from saved data
+function loadSavedRobloxSettings() {
+    const savedKey = localStorage.getItem('af_roblox_api_key');
+    const savedType = localStorage.getItem('af_creator_type');
+    const savedId = localStorage.getItem('af_creator_id');
+    if (savedKey) document.getElementById('rbx-api-key').value = savedKey;
+    if (savedType) document.getElementById('rbx-creator-type').value = savedType;
+    if (savedId) document.getElementById('rbx-creator-id').value = savedId;
+}
+
+function saveRobloxSettings(apiKey, creatorType, creatorId) {
+    localStorage.setItem('af_roblox_api_key', apiKey);
+    localStorage.setItem('af_creator_type', creatorType);
+    localStorage.setItem('af_creator_id', creatorId);
+}
+
 btnUploadRoblox.addEventListener('click', () => {
     if (tracks.length === 0) return alert("Tambahkan track terlebih dahulu!");
     rbxStatus.classList.add('hidden');
     rbxStatus.className = 'rbx-status hidden';
+    loadSavedRobloxSettings();
     robloxModal.classList.remove('hidden');
     lucide.createIcons();
 });
@@ -863,6 +880,9 @@ btnRbxSubmit.addEventListener('click', async () => {
 
     showRbxStatus('loading', '⏳ Rendering audio...');
     btnRbxSubmit.disabled = true;
+
+    let uploadSuccess = false;
+    let operationPath = '';
 
     try {
         await initAudio();
@@ -890,16 +910,21 @@ btnRbxSubmit.addEventListener('click', async () => {
         formData.append('creatorType', creatorType);
         formData.append('creatorId', creatorId);
 
+        const token = localStorage.getItem('af_token');
         const response = await fetch('/api/upload-roblox', {
             method: 'POST',
+            headers: token ? { 'Authorization': 'Bearer ' + token } : {},
             body: formData
         });
 
         const result = await response.json();
 
         if (result.success) {
-            const opPath = result.operation?.path || '';
-            showRbxStatus('success', `✅ Upload berhasil! Audio sedang diproses oleh Roblox. Operation: ${opPath}`);
+            operationPath = result.operation?.path || '';
+            showRbxStatus('success', `✅ Upload berhasil! Operation: ${operationPath}`);
+            uploadSuccess = true;
+            // Save settings for next time
+            saveRobloxSettings(apiKey, creatorType, creatorId);
         } else {
             showRbxStatus('error', `❌ Gagal: ${result.error || 'Unknown error'}`);
         }
@@ -908,6 +933,15 @@ btnRbxSubmit.addEventListener('click', async () => {
         console.error(err);
         showRbxStatus('error', `❌ Error: ${err.message}`);
     }
+
+    // Save to upload history
+    addUploadHistory({
+        name: document.getElementById('rbx-name').value.trim() || 'Untitled',
+        format: document.getElementById('rbx-format').value,
+        date: new Date().toISOString(),
+        status: uploadSuccess ? 'success' : 'error',
+        operation: operationPath
+    });
 
     btnRbxSubmit.disabled = false;
 });
@@ -939,10 +973,94 @@ function encodeMp3Async(buffer) {
 }
 
 // ========================================
+// UPLOAD HISTORY
+// ========================================
+const btnHistory = document.getElementById('btn-history');
+const historyModal = document.getElementById('history-modal');
+const historyClose = document.getElementById('history-close');
+const historyList = document.getElementById('history-list');
+const btnClearHistory = document.getElementById('btn-clear-history');
+
+function getUploadHistory() {
+    try { return JSON.parse(localStorage.getItem('af_upload_history') || '[]'); }
+    catch { return []; }
+}
+
+function addUploadHistory(record) {
+    const history = getUploadHistory();
+    history.unshift(record); // newest first
+    if (history.length > 50) history.pop(); // max 50 records
+    localStorage.setItem('af_upload_history', JSON.stringify(history));
+}
+
+function renderHistory() {
+    const history = getUploadHistory();
+    if (history.length === 0) {
+        historyList.innerHTML = '<p class="history-empty">No uploads yet.</p>';
+        return;
+    }
+
+    historyList.innerHTML = history.map(h => {
+        const date = new Date(h.date);
+        const dateStr = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+            + ' ' + date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const icon = h.status === 'success' ? 'check-circle' : 'x-circle';
+
+        return `
+            <div class="history-item">
+                <div class="history-icon ${h.status}">
+                    <i data-lucide="${icon}"></i>
+                </div>
+                <div class="history-info">
+                    <div class="history-name">${h.name}</div>
+                    <div class="history-meta">${dateStr}</div>
+                </div>
+                <span class="history-badge ${h.format}">${h.format.toUpperCase()}</span>
+            </div>
+        `;
+    }).join('');
+
+    lucide.createIcons();
+}
+
+btnHistory.addEventListener('click', () => {
+    renderHistory();
+    historyModal.classList.remove('hidden');
+    lucide.createIcons();
+});
+
+historyClose.addEventListener('click', () => {
+    historyModal.classList.add('hidden');
+});
+
+historyModal.addEventListener('click', (e) => {
+    if (e.target === historyModal) historyModal.classList.add('hidden');
+});
+
+btnClearHistory.addEventListener('click', () => {
+    if (confirm('Clear all upload history?')) {
+        localStorage.removeItem('af_upload_history');
+        renderHistory();
+    }
+});
+
+// ========================================
+// LOGOUT
+// ========================================
+document.getElementById('btn-logout').addEventListener('click', () => {
+    if (confirm('Logout from Audio Forge?')) {
+        localStorage.removeItem('af_token');
+        localStorage.removeItem('af_user');
+        if (window.location.protocol !== 'file:') {
+            window.location.href = 'login.html';
+        }
+    }
+});
+
+// ========================================
 // KEYBOARD SHORTCUTS
 // ========================================
 document.addEventListener('keydown', async (e) => {
-    // Ignore if user is typing in an input/select
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
     if (e.code === 'Space') {

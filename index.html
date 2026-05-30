@@ -22,6 +22,26 @@
     <!-- Styles -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style_advanced.css">
+
+    <!-- Auth Guard -->
+    <script>
+        (function() {
+            if (window.location.protocol === 'file:') return;
+            var token = localStorage.getItem('af_token');
+            if (!token) { window.location.href = 'login.html'; return; }
+            try {
+                var payload = JSON.parse(atob(token.split('.')[0]));
+                if (payload.exp < Date.now()) {
+                    localStorage.removeItem('af_token');
+                    localStorage.removeItem('af_user');
+                    window.location.href = 'login.html';
+                }
+            } catch(e) {
+                localStorage.removeItem('af_token');
+                window.location.href = 'login.html';
+            }
+        })();
+    </script>
 </head>
 
 <body>
@@ -43,11 +63,21 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button id="btn-history" class="btn secondary" title="Upload History">
+                    <i data-lucide="history"></i> <span class="btn-label">History</span>
+                </button>
                 <button id="btn-upload-roblox" class="btn roblox-btn" title="Upload to Roblox">
                     <i data-lucide="upload-cloud"></i> <span class="btn-label">Roblox</span>
                 </button>
                 <button id="btn-export-wav" class="btn primary"><i data-lucide="download"></i> <span class="btn-label">WAV</span></button>
                 <button id="btn-export-mp3" class="btn secondary"><i data-lucide="file-audio"></i> <span class="btn-label">MP3</span></button>
+                <div class="user-badge">
+                    <i data-lucide="user"></i>
+                    <span id="user-name">admin</span>
+                    <button id="btn-logout" class="btn-logout" title="Logout">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -252,9 +282,32 @@
         </div>
     </div>
 
+    <!-- Upload History Modal -->
+    <div id="history-modal" class="modal-overlay hidden">
+        <div class="modal-panel glass-panel" style="max-width: 560px;">
+            <div class="modal-header">
+                <h2 style="margin-bottom: 0;"><i data-lucide="history"></i> Upload History</h2>
+                <button class="icon-btn" id="history-close" title="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="history-list" class="history-list">
+                    <p class="history-empty">No uploads yet.</p>
+                </div>
+                <button id="btn-clear-history" class="btn secondary" style="width: 100%; margin-top: 0.5rem;">
+                    <i data-lucide="trash-2"></i> Clear History
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
     <script>
         lucide.createIcons();
+        // Set username display
+        const savedUser = localStorage.getItem('af_user');
+        if (savedUser) document.getElementById('user-name').innerText = savedUser;
     </script>
 </body>
 

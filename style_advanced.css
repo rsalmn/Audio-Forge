@@ -106,3 +106,52 @@
 }
 .settings-gear:hover { background: rgba(129,140,248,0.2); }
 .settings-gear i { width: 15px; height: 15px; }
+
+/* === User Badge === */
+.user-badge {
+    display: flex; align-items: center; gap: 0.4rem;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border-glass);
+    border-radius: 99px; padding: 0.3rem 0.5rem 0.3rem 0.65rem;
+    font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);
+    margin-left: 0.25rem;
+}
+.user-badge i:first-child { width: 14px; height: 14px; color: var(--accent-primary); }
+.btn-logout {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    display: flex; align-items: center; padding: 0.2rem; border-radius: 50%;
+    transition: all 0.2s;
+}
+.btn-logout:hover { color: #f87171; background: rgba(248,113,113,0.15); }
+.btn-logout i { width: 14px; height: 14px; }
+
+/* === History List === */
+.history-list {
+    max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;
+    padding-right: 0.25rem;
+}
+.history-list::-webkit-scrollbar { width: 4px; }
+.history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+.history-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    background: rgba(0,0,0,0.2); border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm); padding: 0.65rem 0.85rem;
+    animation: fadeIn 0.2s ease-out;
+}
+.history-icon {
+    width: 32px; height: 32px; border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.history-icon.success { background: rgba(52,211,153,0.12); color: var(--success); }
+.history-icon.error { background: rgba(248,113,113,0.12); color: var(--danger); }
+.history-icon i { width: 16px; height: 16px; }
+.history-info { flex: 1; min-width: 0; }
+.history-name { font-weight: 600; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem; }
+.history-badge {
+    font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.45rem;
+    border-radius: 99px; text-transform: uppercase; flex-shrink: 0;
+}
+.history-badge.mp3 { background: rgba(129,140,248,0.15); color: var(--accent-primary); }
+.history-badge.wav { background: rgba(34,211,238,0.15); color: var(--accent-secondary); }
+.history-empty { color: var(--text-muted); text-align: center; padding: 2rem 0; font-size: 0.85rem; }
