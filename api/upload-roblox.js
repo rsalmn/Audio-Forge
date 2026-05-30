@@ -1,6 +1,7 @@
 const Busboy = require('busboy');
 const FormData = require('form-data');
 const https = require('https');
+const { verifyToken } = require('./auth');
 
 // Disable Vercel's default body parser for multipart support
 module.exports.config = {
@@ -18,6 +19,16 @@ module.exports = async function handler(req, res) {
 
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Verify auth token
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '');
+    if (token) {
+        const user = verifyToken(token);
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid or expired session. Please login again.' });
+        }
     }
 
     try {
