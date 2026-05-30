@@ -837,10 +837,12 @@ robloxModal.addEventListener('click', (e) => {
 
 btnRbxSubmit.addEventListener('click', async () => {
     const displayName = document.getElementById('rbx-name').value.trim();
+    const apiKey = document.getElementById('rbx-api-key').value.trim();
     const format = document.getElementById('rbx-format').value;
     const creatorType = document.getElementById('rbx-creator-type').value;
     const creatorId = document.getElementById('rbx-creator-id').value.trim();
 
+    if (!apiKey) return showRbxStatus('error', 'Masukkan Roblox API Key!');
     if (!displayName) return showRbxStatus('error', 'Masukkan Display Name!');
     if (!creatorId) return showRbxStatus('error', 'Masukkan Creator ID!');
 
@@ -868,6 +870,7 @@ btnRbxSubmit.addEventListener('click', async () => {
 
         const formData = new FormData();
         formData.append('audioFile', audioBlob, filename);
+        formData.append('apiKey', apiKey);
         formData.append('displayName', displayName);
         formData.append('creatorType', creatorType);
         formData.append('creatorId', creatorId);

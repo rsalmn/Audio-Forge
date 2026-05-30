@@ -251,3 +251,27 @@
     border: 1px solid rgba(99, 102, 241, 0.4);
     color: var(--accent-secondary);
 }
+
+.rbx-info-note {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.modal-field input[type=password] {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-glass);
+    color: var(--text-primary);
+    padding: 0.6rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+.modal-field input[type=password]:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}

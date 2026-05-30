@@ -109,7 +109,7 @@
                                 <span><i data-lucide="fast-forward"></i> Speed</span>
                                 <span id="val-speed" class="val-display">1.0x</span>
                             </label>
-                            <input type="range" id="slider-speed" min="0.5" max="2" value="1" step="0.05">
+                            <input type="range" id="slider-speed" min="0.5" max="10" value="1" step="0.05">
                         </div>
 
                         <div class="slider-group">
@@ -167,6 +167,14 @@
                     </button>
                 </div>
                 <div class="modal-body">
+                    <div class="rbx-info-note">
+                        🔑 Setiap pengguna harus memasukkan API Key mereka sendiri. Key Anda tidak disimpan di server.
+                        <a href="https://create.roblox.com/credentials" target="_blank" style="color: var(--accent-secondary);">Buat API Key →</a>
+                    </div>
+                    <div class="modal-field">
+                        <label for="rbx-api-key">Roblox Open Cloud API Key</label>
+                        <input type="password" id="rbx-api-key" placeholder="Masukkan API Key Anda" autocomplete="off">
+                    </div>
                     <div class="modal-field">
                         <label for="rbx-name">Display Name</label>
                         <input type="text" id="rbx-name" placeholder="My Audio Track" maxlength="50">
