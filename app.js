@@ -6,6 +6,7 @@ let isLooping = false;
 
 // Tone.js Master Nodes
 let masterEq, masterReverb, masterVol, masterCompressor, masterLimiter;
+let masterNoise, masterNoiseVol;
 let engineStarted = false;
 
 // DOM Elements
@@ -45,13 +46,14 @@ const valVolume = document.getElementById('val-volume');
 
 // Presets Config
 const presets = {
-    normal: { pitch: 0, speed: 1.0, high: 0, mid: 0, bass: 0, reverb: 0, volume: 0, compress: false },
-    jernih: { pitch: 0, speed: 1.0, high: 3, mid: 1, bass: 0, reverb: 0, volume: 0, compress: true },
-    nightcore: { pitch: 3, speed: 1.25, high: 2, mid: 0, bass: 2, reverb: 0, volume: 0, compress: true },
-    slowed: { pitch: -2, speed: 0.8, high: -2, mid: 0, bass: 4, reverb: 0.2, volume: 0, compress: true },
-    chipmunk: { pitch: 12, speed: 1.1, high: 4, mid: 0, bass: -2, reverb: 0, volume: 0, compress: false },
-    vaporwave: { pitch: -4, speed: 0.75, high: -4, mid: -2, bass: 5, reverb: 0.8, volume: 0, compress: true },
-    deep: { pitch: -8, speed: 1.0, high: -2, mid: -1, bass: 6, reverb: 0, volume: 0, compress: true }
+    normal: { pitch: 0, speed: 1.0, high: 0, mid: 0, bass: 0, reverb: 0, volume: 0, compress: false, noise: false },
+    jernih: { pitch: 0, speed: 1.0, high: 3, mid: 1, bass: 0, reverb: 0, volume: 0, compress: true, noise: false },
+    anticopyright: { pitch: 1, speed: 1.1, high: 0, mid: 1.5, bass: 0, reverb: 0, volume: 0, compress: false, noise: true },
+    nightcore: { pitch: 3, speed: 1.25, high: 2, mid: 0, bass: 2, reverb: 0, volume: 0, compress: true, noise: false },
+    slowed: { pitch: -2, speed: 0.8, high: -2, mid: 0, bass: 4, reverb: 0.2, volume: 0, compress: true, noise: false },
+    chipmunk: { pitch: 12, speed: 1.1, high: 4, mid: 0, bass: -2, reverb: 0, volume: 0, compress: false, noise: false },
+    vaporwave: { pitch: -4, speed: 0.75, high: -4, mid: -2, bass: 5, reverb: 0.8, volume: 0, compress: true, noise: false },
+    deep: { pitch: -8, speed: 1.0, high: -2, mid: -1, bass: 6, reverb: 0, volume: 0, compress: true, noise: false }
 };
 
 // Worker Code as Blob URL
@@ -113,6 +115,12 @@ async function initAudio() {
     masterLimiter = new Tone.Limiter(-0.5).toDestination();
     
     masterEq.chain(masterCompressor, masterReverb, masterVol, masterLimiter);
+    
+    // Subtle Noise Layer for Anti-Copyright
+    masterNoise = new Tone.Noise("brown");
+    masterNoiseVol = new Tone.Volume(-Infinity).connect(masterLimiter);
+    masterNoise.connect(masterNoiseVol);
+    masterNoise.start();
     
     await masterReverb.generate();
     masterReverb.wet.value = 0;
@@ -566,6 +574,11 @@ function applySettings(settings) {
     // Compressor Threshold (-24dB active, 0dB inactive)
     masterCompressor.threshold.value = settings.compress ? -24 : 0;
     
+    // Subtle Noise Layer (-45dB active, -Infinity inactive)
+    if (masterNoiseVol) {
+        masterNoiseVol.volume.value = settings.noise ? -45 : -Infinity;
+    }
+    
     tracks.forEach(t => {
         t.player.playbackRate = settings.speed;
         t.trackPitch.pitch = parseFloat(settings.pitch) + t.pitch;
@@ -679,6 +692,15 @@ async function renderOffline() {
         const offLimiter = new Tone.Limiter(-0.5).toDestination();
         
         offEq.chain(offComp, offReverb, offVol, offLimiter);
+        
+        // Anti-Copyright Noise Layer for Render
+        const isNoiseActive = presets[currentPreset] && presets[currentPreset].noise;
+        if (isNoiseActive) {
+            const offNoise = new Tone.Noise("brown");
+            const offNoiseVol = new Tone.Volume(-45).connect(offLimiter);
+            offNoise.connect(offNoiseVol);
+            offNoise.start(0);
+        }
         
         await offReverb.generate();
         offReverb.wet.value = masterReverb.wet.value;
