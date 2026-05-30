@@ -23,6 +23,8 @@ const loadingText = document.getElementById('loading-text');
 const progressContainer = document.getElementById('progress-container');
 const progressBar = document.getElementById('progress-bar');
 const appContainer = document.querySelector('.app-container');
+const timeCurrent = document.getElementById('time-current');
+const timeTotal = document.getElementById('time-total');
 
 // Global Sliders
 const sliderPitch = document.getElementById('slider-pitch');
@@ -189,6 +191,7 @@ async function handleFiles(files) {
     
     updateControlsState();
     updateLoopDuration();
+    updateTotalTime();
     hideLoading();
 }
 
@@ -363,6 +366,7 @@ window.removeTrack = (id) => {
     }
     updateControlsState();
     updateLoopDuration();
+    updateTotalTime();
 };
 
 function updateControlsState() {
@@ -429,6 +433,11 @@ function drawWaveform(track) {
 
 // Update Playheads
 function updatePlayheads() {
+    if (isPlaying || Tone.Transport.state === 'paused') {
+        const time = Tone.Transport.seconds;
+        timeCurrent.innerText = formatTime(time);
+    }
+    
     if (isPlaying) {
         const time = Tone.Transport.seconds;
         tracks.forEach(track => {
@@ -451,9 +460,31 @@ function updatePlayheads() {
             const ph = document.getElementById(`playhead-${t.id}`);
             if (ph) ph.style.left = '0%';
         });
+        timeCurrent.innerText = formatTime(0);
     }
     
     requestAnimationFrame(updatePlayheads);
+}
+
+function formatTime(seconds) {
+    if (!isFinite(seconds) || seconds < 0) seconds = 0;
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return m + ':' + String(s).padStart(2, '0');
+}
+
+function updateTotalTime() {
+    if (tracks.length === 0) {
+        timeTotal.innerText = formatTime(0);
+        return;
+    }
+    const rate = parseFloat(sliderSpeed.value);
+    let maxDur = 0;
+    tracks.forEach(t => {
+        const dur = t.offset + ((t.trimEnd - t.trimStart) / rate);
+        if (dur > maxDur) maxDur = dur;
+    });
+    timeTotal.innerText = formatTime(maxDur);
 }
 
 // Transport
@@ -553,6 +584,7 @@ sliderSpeed.addEventListener('input', (e) => {
     if(engineStarted) {
         tracks.forEach(t => t.player.playbackRate = val);
         updateLoopDuration();
+        updateTotalTime();
     }
     updateSliderDisplays();
     updatePresetUI('custom');
@@ -777,3 +809,113 @@ function encodeWAV(samples, format, sampleRate, numChannels, bitDepth) {
 }
 
 updatePresetUI('normal');
+
+// ========================================
+// ROBLOX UPLOAD
+// ========================================
+const btnUploadRoblox = document.getElementById('btn-upload-roblox');
+const robloxModal = document.getElementById('roblox-modal');
+const modalClose = document.getElementById('modal-close');
+const btnRbxSubmit = document.getElementById('btn-rbx-submit');
+const rbxStatus = document.getElementById('rbx-status');
+
+btnUploadRoblox.addEventListener('click', () => {
+    if (tracks.length === 0) return alert("Tambahkan track terlebih dahulu!");
+    rbxStatus.classList.add('hidden');
+    rbxStatus.className = 'rbx-status hidden';
+    robloxModal.classList.remove('hidden');
+    lucide.createIcons();
+});
+
+modalClose.addEventListener('click', () => {
+    robloxModal.classList.add('hidden');
+});
+
+robloxModal.addEventListener('click', (e) => {
+    if (e.target === robloxModal) robloxModal.classList.add('hidden');
+});
+
+btnRbxSubmit.addEventListener('click', async () => {
+    const displayName = document.getElementById('rbx-name').value.trim();
+    const format = document.getElementById('rbx-format').value;
+    const creatorType = document.getElementById('rbx-creator-type').value;
+    const creatorId = document.getElementById('rbx-creator-id').value.trim();
+
+    if (!displayName) return showRbxStatus('error', 'Masukkan Display Name!');
+    if (!creatorId) return showRbxStatus('error', 'Masukkan Creator ID!');
+
+    showRbxStatus('loading', '⏳ Rendering audio...');
+    btnRbxSubmit.disabled = true;
+
+    try {
+        await initAudio();
+        const buffer = await renderOffline();
+        if (!buffer) throw new Error('Render gagal');
+
+        showRbxStatus('loading', '⏳ Meng-encode audio...');
+
+        let audioBlob;
+        let filename;
+        if (format === 'wav') {
+            audioBlob = audioBufferToWav(buffer);
+            filename = displayName.replace(/\s+/g, '_') + '.wav';
+        } else {
+            audioBlob = await encodeMp3Async(buffer);
+            filename = displayName.replace(/\s+/g, '_') + '.mp3';
+        }
+
+        showRbxStatus('loading', '⏳ Uploading ke Roblox...');
+
+        const formData = new FormData();
+        formData.append('audioFile', audioBlob, filename);
+        formData.append('displayName', displayName);
+        formData.append('creatorType', creatorType);
+        formData.append('creatorId', creatorId);
+
+        const response = await fetch('/api/upload-roblox', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            const opPath = result.operation?.path || '';
+            showRbxStatus('success', `✅ Upload berhasil! Audio sedang diproses oleh Roblox. Operation: ${opPath}`);
+        } else {
+            showRbxStatus('error', `❌ Gagal: ${result.error || 'Unknown error'}`);
+        }
+
+    } catch (err) {
+        console.error(err);
+        showRbxStatus('error', `❌ Error: ${err.message}`);
+    }
+
+    btnRbxSubmit.disabled = false;
+});
+
+function showRbxStatus(type, message) {
+    rbxStatus.className = `rbx-status ${type}`;
+    rbxStatus.classList.remove('hidden');
+    rbxStatus.innerText = message;
+}
+
+// Async MP3 encode using the existing Web Worker (returns a Promise<Blob>)
+function encodeMp3Async(buffer) {
+    return new Promise((resolve, reject) => {
+        const numChannels = buffer.numberOfChannels;
+        const left = buffer.getChannelData(0);
+        const right = numChannels === 2 ? buffer.getChannelData(1) : null;
+
+        const worker = new Worker(workerUrl);
+        worker.onmessage = function(e) {
+            if (e.data.type === 'done') {
+                const mp3Blob = new Blob(e.data.data, { type: 'audio/mp3' });
+                worker.terminate();
+                resolve(mp3Blob);
+            }
+        };
+        worker.onerror = reject;
+        worker.postMessage({ left, right, numChannels, sampleRate: buffer.sampleRate });
+    });
+}

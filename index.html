@@ -29,6 +29,9 @@
                 <h1>Audio Forge</h1>
             </div>
             <div class="header-actions">
+                <button id="btn-upload-roblox" class="btn roblox-btn" title="Upload to Roblox">
+                    <i data-lucide="upload-cloud"></i> Roblox
+                </button>
                 <button id="btn-export-wav" class="btn primary"><i data-lucide="download"></i> Export WAV</button>
                 <button id="btn-export-mp3" class="btn secondary"><i data-lucide="file-audio"></i> Export MP3</button>
             </div>
@@ -51,6 +54,12 @@
                         <i data-lucide="music"></i>
                         <p>Upload audio to start forging.</p>
                     </div>
+                </div>
+
+                <div class="time-display" id="time-display">
+                    <span id="time-current">0:00</span>
+                    <span class="time-separator">/</span>
+                    <span id="time-total">0:00</span>
                 </div>
 
                 <div class="master-transport">
@@ -145,6 +154,46 @@
             <p id="loading-text">Processing Audio...</p>
             <div class="progress-bar-container hidden" id="progress-container">
                 <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- Roblox Upload Modal -->
+        <div id="roblox-modal" class="modal-overlay hidden">
+            <div class="modal-panel glass-panel">
+                <div class="modal-header">
+                    <h2 style="margin-bottom: 0;"><i data-lucide="upload-cloud"></i> Upload to Roblox</h2>
+                    <button class="icon-btn" id="modal-close" title="Close">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-field">
+                        <label for="rbx-name">Display Name</label>
+                        <input type="text" id="rbx-name" placeholder="My Audio Track" maxlength="50">
+                    </div>
+                    <div class="modal-field">
+                        <label for="rbx-format">Format</label>
+                        <select id="rbx-format">
+                            <option value="mp3">MP3</option>
+                            <option value="wav">WAV</option>
+                        </select>
+                    </div>
+                    <div class="modal-field">
+                        <label for="rbx-creator-type">Creator Type</label>
+                        <select id="rbx-creator-type">
+                            <option value="user">User (Akun Pribadi)</option>
+                            <option value="group">Group (Grup Roblox)</option>
+                        </select>
+                    </div>
+                    <div class="modal-field">
+                        <label for="rbx-creator-id">Creator ID</label>
+                        <input type="text" id="rbx-creator-id" placeholder="Masukkan User ID atau Group ID">
+                    </div>
+                    <div id="rbx-status" class="rbx-status hidden"></div>
+                    <button id="btn-rbx-submit" class="btn primary" style="width: 100%; margin-top: 1rem;">
+                        <i data-lucide="rocket"></i> Upload Sekarang
+                    </button>
+                </div>
             </div>
         </div>
     </div>

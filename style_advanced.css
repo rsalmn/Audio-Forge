@@ -119,8 +119,135 @@
 }
 .hidden { display: none !important; }
 
+/* Time Display */
+.time-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: 'Outfit', monospace;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-top: 1.5rem;
+    margin-bottom: -0.5rem;
+}
+#time-current {
+    color: var(--accent-secondary);
+    text-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+    min-width: 3.5rem;
+    text-align: right;
+}
+.time-separator {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+#time-total {
+    color: var(--text-secondary);
+    min-width: 3.5rem;
+    text-align: left;
+}
+
 /* Drag & Drop */
 .drag-active {
     border: 2px dashed var(--accent-secondary) !important;
     background: rgba(6, 182, 212, 0.1) !important;
+}
+
+/* Roblox Button */
+.roblox-btn {
+    background: linear-gradient(135deg, #00b06f, #00d4aa) !important;
+    box-shadow: 0 4px 15px rgba(0, 176, 111, 0.3);
+}
+.roblox-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 176, 111, 0.5);
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.modal-overlay.hidden {
+    display: none !important;
+}
+.modal-panel {
+    width: 100%;
+    max-width: 460px;
+    animation: fadeIn 0.25s ease-out;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.modal-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.modal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.modal-field label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+.modal-field input,
+.modal-field select {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-glass);
+    color: var(--text-primary);
+    padding: 0.6rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+.modal-field input:focus,
+.modal-field select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+.modal-field select option {
+    background: #1e293b;
+}
+
+/* Status Messages */
+.rbx-status {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    text-align: center;
+}
+.rbx-status.success {
+    background: rgba(0, 176, 111, 0.15);
+    border: 1px solid rgba(0, 176, 111, 0.4);
+    color: #00d4aa;
+}
+.rbx-status.error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #f87171;
+}
+.rbx-status.loading {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: var(--accent-secondary);
 }

@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "audio-forge",
+  "version": "1.0.0",
+  "description": "Premium Audio Editor with Roblox Upload",
+  "dependencies": {
+    "form-data": "^4.0.0",
+    "busboy": "^1.6.0"
+  }
+}
