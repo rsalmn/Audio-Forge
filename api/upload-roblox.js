@@ -20,13 +20,12 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const apiKey = process.env.ROBLOX_API_KEY;
-    if (!apiKey) {
-        return res.status(500).json({ error: 'ROBLOX_API_KEY is not configured on the server.' });
-    }
-
     try {
-        const { audioBuffer, filename, displayName, creatorType, creatorId } = await parseMultipart(req);
+        const { audioBuffer, filename, apiKey, displayName, creatorType, creatorId } = await parseMultipart(req);
+
+        if (!apiKey) {
+            return res.status(400).json({ error: 'API Key is required. Please enter your Roblox Open Cloud API Key.' });
+        }
 
         if (!audioBuffer || !displayName || !creatorType || !creatorId) {
             return res.status(400).json({ error: 'Missing required fields: audioFile, displayName, creatorType, creatorId' });
@@ -54,7 +53,7 @@ module.exports = async function handler(req, res) {
             contentType: filename && filename.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'
         });
 
-        // Send to Roblox Open Cloud API
+        // Send to Roblox Open Cloud API using the USER's API key
         const robloxResponse = await new Promise((resolve, reject) => {
             const options = {
                 hostname: 'apis.roblox.com',
@@ -78,7 +77,12 @@ module.exports = async function handler(req, res) {
             form.pipe(request);
         });
 
-        const responseBody = JSON.parse(robloxResponse.body);
+        let responseBody;
+        try {
+            responseBody = JSON.parse(robloxResponse.body);
+        } catch {
+            responseBody = { raw: robloxResponse.body };
+        }
 
         if (robloxResponse.status >= 200 && robloxResponse.status < 300) {
             return res.status(200).json({
@@ -87,7 +91,7 @@ module.exports = async function handler(req, res) {
                 operation: responseBody
             });
         } else {
-            return res.status(robloxResponse.status).json({
+            return res.status(robloxResponse.status >= 400 ? robloxResponse.status : 500).json({
                 success: false,
                 error: responseBody.message || responseBody.error || 'Roblox API error',
                 details: responseBody
@@ -106,6 +110,7 @@ function parseMultipart(req) {
         const result = {
             audioBuffer: null,
             filename: '',
+            apiKey: '',
             displayName: '',
             creatorType: '',
             creatorId: ''
@@ -123,6 +128,7 @@ function parseMultipart(req) {
         });
 
         busboy.on('field', (fieldname, val) => {
+            if (fieldname === 'apiKey') result.apiKey = val;
             if (fieldname === 'displayName') result.displayName = val;
             if (fieldname === 'creatorType') result.creatorType = val;
             if (fieldname === 'creatorId') result.creatorId = val;
