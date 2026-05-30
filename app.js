@@ -16,6 +16,8 @@ const btnStop = document.getElementById('btn-stop');
 const btnLoop = document.getElementById('btn-loop');
 const playIcon = document.getElementById('play-icon');
 const playText = document.getElementById('play-text');
+const trackCountEl = document.getElementById('track-count');
+const presetNameDisplay = document.getElementById('current-preset-name');
 const btnExportWav = document.getElementById('btn-export-wav');
 const btnExportMp3 = document.getElementById('btn-export-mp3');
 const loadingOverlay = document.getElementById('loading-overlay');
@@ -192,6 +194,7 @@ async function handleFiles(files) {
     updateControlsState();
     updateLoopDuration();
     updateTotalTime();
+    updateTrackCount();
     hideLoading();
 }
 
@@ -225,7 +228,7 @@ function addTrackToUI(track) {
     
     div.innerHTML = `
         <div class="track-main">
-            <div class="icon-btn" style="background: var(--accent-gradient)" onclick="toggleSettings(${track.id})">
+            <div class="settings-gear" onclick="toggleSettings(${track.id})">
                 <i data-lucide="settings"></i>
             </div>
             <div class="track-info">
@@ -367,12 +370,17 @@ window.removeTrack = (id) => {
     updateControlsState();
     updateLoopDuration();
     updateTotalTime();
+    updateTrackCount();
 };
 
 function updateControlsState() {
     const hasTracks = tracks.length > 0;
     btnPlayPause.disabled = !hasTracks;
     btnStop.disabled = !hasTracks;
+}
+
+function updateTrackCount() {
+    if (trackCountEl) trackCountEl.innerText = tracks.length;
 }
 
 function updateLoopDuration() {
@@ -413,7 +421,11 @@ function drawWaveform(track) {
     const step = Math.ceil(samplesToDraw / width);
     const amp = height / 2;
     
-    ctx.fillStyle = 'rgba(99, 102, 241, 0.8)';
+    const gradient = ctx.createLinearGradient(0, 0, width, 0);
+    gradient.addColorStop(0, 'rgba(129, 140, 248, 0.85)');
+    gradient.addColorStop(0.5, 'rgba(34, 211, 238, 0.75)');
+    gradient.addColorStop(1, 'rgba(168, 85, 247, 0.85)');
+    ctx.fillStyle = gradient;
     
     for (let i = 0; i < width; i++) {
         let min = 1.0, max = -1.0;
@@ -512,7 +524,7 @@ function playAll() {
     Tone.Transport.start();
     isPlaying = true;
     playIcon.setAttribute('data-lucide', 'pause');
-    playText.innerText = 'Pause';
+    playText.innerText = 'Playing';
     lucide.createIcons();
 }
 
@@ -520,7 +532,7 @@ function pauseAll() {
     Tone.Transport.pause();
     isPlaying = false;
     playIcon.setAttribute('data-lucide', 'play');
-    playText.innerText = 'Play All';
+    playText.innerText = 'Paused';
     lucide.createIcons();
 }
 
@@ -528,7 +540,7 @@ function stopAll() {
     Tone.Transport.stop();
     isPlaying = false;
     playIcon.setAttribute('data-lucide', 'play');
-    playText.innerText = 'Play All';
+    playText.innerText = 'Stopped';
     lucide.createIcons();
 }
 
@@ -562,8 +574,8 @@ function applySettings(settings) {
 }
 
 function updateSliderDisplays() {
-    valPitch.innerText = sliderPitch.value;
-    valSpeed.innerText = sliderSpeed.value + 'x';
+    valPitch.innerText = sliderPitch.value + ' st';
+    valSpeed.innerText = parseFloat(sliderSpeed.value).toFixed(2) + 'x';
     valHigh.innerText = sliderHigh.value + ' dB';
     valMid.innerText = sliderMid.value + ' dB';
     valBass.innerText = sliderBass.value + ' dB';
@@ -635,6 +647,9 @@ function updatePresetUI(presetName) {
     if (presetName !== 'custom') {
         const activeBtn = document.querySelector(`.preset-btn[data-preset="${presetName}"]`);
         if (activeBtn) activeBtn.classList.add('active');
+        if (presetNameDisplay) presetNameDisplay.innerText = presetName.charAt(0).toUpperCase() + presetName.slice(1);
+    } else {
+        if (presetNameDisplay) presetNameDisplay.innerText = 'Custom';
     }
 }
 
@@ -922,3 +937,29 @@ function encodeMp3Async(buffer) {
         worker.postMessage({ left, right, numChannels, sampleRate: buffer.sampleRate });
     });
 }
+
+// ========================================
+// KEYBOARD SHORTCUTS
+// ========================================
+document.addEventListener('keydown', async (e) => {
+    // Ignore if user is typing in an input/select
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+
+    if (e.code === 'Space') {
+        e.preventDefault();
+        if (tracks.length === 0) return;
+        await initAudio();
+        if (isPlaying) pauseAll();
+        else playAll();
+    }
+
+    if (e.code === 'KeyS' && !e.ctrlKey) {
+        e.preventDefault();
+        if (tracks.length > 0) { await initAudio(); stopAll(); }
+    }
+
+    if (e.code === 'KeyL') {
+        e.preventDefault();
+        btnLoop.click();
+    }
+});

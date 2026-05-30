@@ -1,120 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Forge | Premium Audio Editor</title>
-    <meta name="description" content="Edit, process, merge, and export audio with premium presets like Nightcore and Slowed.">
-    
+    <meta name="description"
+        content="Edit, process, merge, and export audio with premium presets like Nightcore and Slowed.">
+
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+
     <!-- Audio Libs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
-    
+
     <!-- Styles -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="style_advanced.css">
 </head>
+
 <body>
+    <!-- Ambient Background Orbs -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
     <div class="app-container">
         <!-- Header -->
-        <header class="glass-panel main-header">
+        <header class="main-header">
             <div class="logo">
-                <i data-lucide="audio-lines" class="logo-icon"></i>
-                <h1>Audio Forge</h1>
+                <div class="logo-icon-wrap">
+                    <i data-lucide="audio-lines" class="logo-icon"></i>
+                </div>
+                <div>
+                    <h1>Audio Forge</h1>
+                    <span class="logo-sub">Premium Audio Editor</span>
+                </div>
             </div>
             <div class="header-actions">
                 <button id="btn-upload-roblox" class="btn roblox-btn" title="Upload to Roblox">
-                    <i data-lucide="upload-cloud"></i> Roblox
+                    <i data-lucide="upload-cloud"></i> <span class="btn-label">Roblox</span>
                 </button>
-                <button id="btn-export-wav" class="btn primary"><i data-lucide="download"></i> Export WAV</button>
-                <button id="btn-export-mp3" class="btn secondary"><i data-lucide="file-audio"></i> Export MP3</button>
+                <button id="btn-export-wav" class="btn primary"><i data-lucide="download"></i> <span class="btn-label">WAV</span></button>
+                <button id="btn-export-mp3" class="btn secondary"><i data-lucide="file-audio"></i> <span class="btn-label">MP3</span></button>
             </div>
         </header>
 
-        <main class="main-content">
-            <!-- Left Column: Tracks -->
-            <section class="tracks-section glass-panel">
-                <div class="section-header">
-                    <h2>Tracks</h2>
-                    <label class="btn icon-btn add-track-btn" title="Add Track">
-                        <i data-lucide="plus"></i>
-                        <input type="file" id="file-upload" accept="audio/*" multiple hidden>
-                    </label>
-                </div>
-                
-                <div id="track-list" class="track-list">
-                    <!-- Tracks will be dynamically added here -->
-                    <div class="empty-state">
-                        <i data-lucide="music"></i>
-                        <p>Upload audio to start forging.</p>
-                    </div>
-                </div>
-
+        <!-- Transport Bar -->
+        <section class="transport-bar glass-panel">
+            <div class="transport-left">
+                <button id="btn-stop" class="transport-btn" disabled title="Stop">
+                    <i data-lucide="square"></i>
+                </button>
+                <button id="btn-play-pause" class="transport-btn play-btn" disabled>
+                    <i data-lucide="play" id="play-icon"></i>
+                </button>
+                <button id="btn-loop" class="transport-btn" title="Toggle Loop">
+                    <i data-lucide="repeat"></i>
+                </button>
+            </div>
+            <div class="transport-center">
                 <div class="time-display" id="time-display">
                     <span id="time-current">0:00</span>
                     <span class="time-separator">/</span>
                     <span id="time-total">0:00</span>
                 </div>
+                <span id="play-text" class="transport-status">Stopped</span>
+            </div>
+            <div class="transport-right">
+                <div class="preset-quick">
+                    <span class="transport-label">Preset:</span>
+                    <span id="current-preset-name" class="preset-name-display">Normal</span>
+                </div>
+            </div>
+        </section>
 
-                <div class="master-transport">
-                    <button id="btn-play-pause" class="btn large-play" disabled>
-                        <i data-lucide="play" id="play-icon"></i>
-                        <span id="play-text">Play All</span>
-                    </button>
-                    <button id="btn-stop" class="btn icon-btn" disabled title="Stop">
-                        <i data-lucide="square"></i>
-                    </button>
-                    <button id="btn-loop" class="btn icon-btn" title="Toggle Loop">
-                        <i data-lucide="repeat"></i>
-                    </button>
+        <main class="main-content">
+            <!-- Left: Tracks + Waveforms (Wide) -->
+            <section class="tracks-section">
+                <div class="section-header glass-panel">
+                    <div class="section-title">
+                        <i data-lucide="layers"></i>
+                        <h2>Tracks</h2>
+                        <span class="track-count" id="track-count">0</span>
+                    </div>
+                    <label class="btn add-track-btn" title="Add Track">
+                        <i data-lucide="plus"></i> Add Track
+                        <input type="file" id="file-upload" accept="audio/*" multiple hidden>
+                    </label>
+                </div>
+
+                <div id="track-list" class="track-list">
+                    <div class="empty-state">
+                        <div class="empty-icon-wrap">
+                            <i data-lucide="music"></i>
+                        </div>
+                        <h3>No tracks yet</h3>
+                        <p>Upload audio or drag & drop files to start forging.</p>
+                    </div>
                 </div>
             </section>
 
-            <!-- Right Column: Effects & Presets -->
-            <section class="effects-section">
+            <!-- Right: Presets + FX -->
+            <aside class="sidebar">
                 <!-- Presets -->
                 <div class="presets-container glass-panel">
-                    <h2>Presets</h2>
+                    <div class="panel-header">
+                        <i data-lucide="sparkles"></i>
+                        <h2>Presets</h2>
+                    </div>
                     <div class="preset-grid">
-                        <button class="preset-btn" data-preset="normal">Normal</button>
-                        <button class="preset-btn" data-preset="jernih">Jernih (Clear)</button>
-                        <button class="preset-btn" data-preset="nightcore">Nightcore</button>
-                        <button class="preset-btn" data-preset="slowed">Slowed</button>
-                        <button class="preset-btn" data-preset="chipmunk">Chipmunk</button>
-                        <button class="preset-btn" data-preset="vaporwave">Vaporwave</button>
-                        <button class="preset-btn" data-preset="deep">Deep</button>
+                        <button class="preset-btn" data-preset="normal"><i data-lucide="circle"></i> Normal</button>
+                        <button class="preset-btn" data-preset="jernih"><i data-lucide="diamond"></i> Jernih</button>
+                        <button class="preset-btn" data-preset="nightcore"><i data-lucide="zap"></i> Nightcore</button>
+                        <button class="preset-btn" data-preset="slowed"><i data-lucide="moon"></i> Slowed</button>
+                        <button class="preset-btn" data-preset="chipmunk"><i data-lucide="squirrel"></i> Chipmunk</button>
+                        <button class="preset-btn" data-preset="vaporwave"><i data-lucide="waves"></i> Vaporwave</button>
+                        <button class="preset-btn" data-preset="deep"><i data-lucide="mountain"></i> Deep</button>
                     </div>
                 </div>
 
                 <!-- Master FX -->
                 <div class="fx-container glass-panel">
-                    <h2>Master Processing</h2>
+                    <div class="panel-header">
+                        <i data-lucide="sliders-horizontal"></i>
+                        <h2>Master Processing</h2>
+                    </div>
                     <div class="sliders">
                         <div class="slider-group">
                             <label>
-                                <span><i data-lucide="activity"></i> Pitch (Semitones)</span>
-                                <span id="val-pitch" class="val-display">0</span>
+                                <span><i data-lucide="activity"></i> Pitch</span>
+                                <span id="val-pitch" class="val-display">0 st</span>
                             </label>
                             <input type="range" id="slider-pitch" min="-24" max="24" value="0" step="1">
                         </div>
-                        
+
                         <div class="slider-group">
                             <label>
-                                <span><i data-lucide="fast-forward"></i> Speed</span>
+                                <span><i data-lucide="gauge"></i> Speed</span>
                                 <span id="val-speed" class="val-display">1.0x</span>
                             </label>
                             <input type="range" id="slider-speed" min="0.5" max="10" value="1" step="0.05">
                         </div>
 
+                        <div class="slider-divider"></div>
+
                         <div class="slider-group">
                             <label>
-                                <span><i data-lucide="speaker"></i> High (Treble)</span>
+                                <span><i data-lucide="triangle"></i> High</span>
                                 <span id="val-high" class="val-display">0 dB</span>
                             </label>
                             <input type="range" id="slider-high" min="-20" max="20" value="0" step="1">
@@ -122,7 +160,7 @@
 
                         <div class="slider-group">
                             <label>
-                                <span><i data-lucide="speaker"></i> Mid (Vocal)</span>
+                                <span><i data-lucide="minus"></i> Mid</span>
                                 <span id="val-mid" class="val-display">0 dB</span>
                             </label>
                             <input type="range" id="slider-mid" min="-20" max="20" value="0" step="1">
@@ -130,78 +168,86 @@
 
                         <div class="slider-group">
                             <label>
-                                <span><i data-lucide="speaker"></i> Low (Bass)</span>
+                                <span><i data-lucide="chevrons-down"></i> Low</span>
                                 <span id="val-bass" class="val-display">0 dB</span>
                             </label>
                             <input type="range" id="slider-bass" min="-20" max="20" value="0" step="1">
                         </div>
 
+                        <div class="slider-divider"></div>
+
                         <div class="slider-group">
                             <label>
-                                <span><i data-lucide="volume-2"></i> Master Volume</span>
+                                <span><i data-lucide="volume-2"></i> Volume</span>
                                 <span id="val-volume" class="val-display">0 dB</span>
                             </label>
                             <input type="range" id="slider-volume" min="-30" max="10" value="0" step="1">
                         </div>
                     </div>
                 </div>
-            </section>
+            </aside>
         </main>
 
-        <!-- Loading Overlay -->
-        <div id="loading-overlay" class="loading-overlay hidden">
-            <div class="spinner"></div>
-            <p id="loading-text">Processing Audio...</p>
-            <div class="progress-bar-container hidden" id="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
-            </div>
-        </div>
+        <!-- Footer -->
+        <footer class="app-footer">
+            <span>Audio Forge v2.0 — Built with Tone.js</span>
+            <span>⌨ Space: Play/Pause &nbsp;|&nbsp; Drag & Drop to add tracks</span>
+        </footer>
+    </div>
 
-        <!-- Roblox Upload Modal -->
-        <div id="roblox-modal" class="modal-overlay hidden">
-            <div class="modal-panel glass-panel">
-                <div class="modal-header">
-                    <h2 style="margin-bottom: 0;"><i data-lucide="upload-cloud"></i> Upload to Roblox</h2>
-                    <button class="icon-btn" id="modal-close" title="Close">
-                        <i data-lucide="x"></i>
-                    </button>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader-ring"></div>
+        <p id="loading-text">Processing Audio...</p>
+        <div class="progress-bar-container hidden" id="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Roblox Upload Modal -->
+    <div id="roblox-modal" class="modal-overlay hidden">
+        <div class="modal-panel glass-panel">
+            <div class="modal-header">
+                <h2 style="margin-bottom: 0;"><i data-lucide="upload-cloud"></i> Upload to Roblox</h2>
+                <button class="icon-btn" id="modal-close" title="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="rbx-info-note">
+                    🔑 Setiap pengguna harus memasukkan API Key mereka sendiri. Key Anda tidak disimpan di server.
+                    <a href="https://create.roblox.com/credentials" target="_blank">Buat API Key →</a>
                 </div>
-                <div class="modal-body">
-                    <div class="rbx-info-note">
-                        🔑 Setiap pengguna harus memasukkan API Key mereka sendiri. Key Anda tidak disimpan di server.
-                        <a href="https://create.roblox.com/credentials" target="_blank" style="color: var(--accent-secondary);">Buat API Key →</a>
-                    </div>
-                    <div class="modal-field">
-                        <label for="rbx-api-key">Roblox Open Cloud API Key</label>
-                        <input type="password" id="rbx-api-key" placeholder="Masukkan API Key Anda" autocomplete="off">
-                    </div>
-                    <div class="modal-field">
-                        <label for="rbx-name">Display Name</label>
-                        <input type="text" id="rbx-name" placeholder="My Audio Track" maxlength="50">
-                    </div>
-                    <div class="modal-field">
-                        <label for="rbx-format">Format</label>
-                        <select id="rbx-format">
-                            <option value="mp3">MP3</option>
-                            <option value="wav">WAV</option>
-                        </select>
-                    </div>
-                    <div class="modal-field">
-                        <label for="rbx-creator-type">Creator Type</label>
-                        <select id="rbx-creator-type">
-                            <option value="user">User (Akun Pribadi)</option>
-                            <option value="group">Group (Grup Roblox)</option>
-                        </select>
-                    </div>
-                    <div class="modal-field">
-                        <label for="rbx-creator-id">Creator ID</label>
-                        <input type="text" id="rbx-creator-id" placeholder="Masukkan User ID atau Group ID">
-                    </div>
-                    <div id="rbx-status" class="rbx-status hidden"></div>
-                    <button id="btn-rbx-submit" class="btn primary" style="width: 100%; margin-top: 1rem;">
-                        <i data-lucide="rocket"></i> Upload Sekarang
-                    </button>
+                <div class="modal-field">
+                    <label for="rbx-api-key">Roblox Open Cloud API Key</label>
+                    <input type="password" id="rbx-api-key" placeholder="Masukkan API Key Anda" autocomplete="off">
                 </div>
+                <div class="modal-field">
+                    <label for="rbx-name">Display Name</label>
+                    <input type="text" id="rbx-name" placeholder="My Audio Track" maxlength="50">
+                </div>
+                <div class="modal-field">
+                    <label for="rbx-format">Format</label>
+                    <select id="rbx-format">
+                        <option value="mp3">MP3</option>
+                        <option value="wav">WAV</option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label for="rbx-creator-type">Creator Type</label>
+                    <select id="rbx-creator-type">
+                        <option value="user">User (Akun Pribadi)</option>
+                        <option value="group">Group (Grup Roblox)</option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label for="rbx-creator-id">Creator ID</label>
+                    <input type="text" id="rbx-creator-id" placeholder="Masukkan User ID atau Group ID">
+                </div>
+                <div id="rbx-status" class="rbx-status hidden"></div>
+                <button id="btn-rbx-submit" class="btn primary" style="width: 100%; margin-top: 0.5rem;">
+                    <i data-lucide="rocket"></i> Upload Sekarang
+                </button>
             </div>
         </div>
     </div>
@@ -211,4 +257,5 @@
         lucide.createIcons();
     </script>
 </body>
+
 </html>
