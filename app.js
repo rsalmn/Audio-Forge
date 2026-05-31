@@ -6,7 +6,7 @@ let isLooping = false;
 
 // Tone.js Master Nodes
 let masterEq, masterReverb, masterVol, masterCompressor, masterLimiter;
-let masterNoise, masterNoiseVol;
+let masterNoise, masterNoiseVol, masterChorus;
 let engineStarted = false;
 
 // DOM Elements
@@ -46,10 +46,10 @@ const valVolume = document.getElementById('val-volume');
 
 // Presets Config
 const presets = {
-    normal: { pitch: 0, speed: 1.0, high: 0, mid: 0, bass: 0, reverb: 0, volume: 0, compress: false, noise: false },
-    jernih: { pitch: 0, speed: 1.0, high: 3, mid: 1, bass: 0, reverb: 0, volume: 0, compress: true, noise: false },
-    anticopyright: { pitch: 1, speed: 1.1, high: 0, mid: 1.5, bass: 0, reverb: 0, volume: 0, compress: false, noise: true },
-    nightcore: { pitch: 3, speed: 1.25, high: 2, mid: 0, bass: 2, reverb: 0, volume: 0, compress: true, noise: false },
+    normal: { pitch: 0, speed: 1.0, high: 0, mid: 0, bass: 0, reverb: 0, volume: 0, compress: false, noise: false, chorus: false },
+    jernih: { pitch: 0, speed: 1.0, high: 3, mid: 1, bass: 0, reverb: 0, volume: 0, compress: true, noise: false, chorus: false },
+    anticopyright: { pitch: 1, speed: 1.1, high: 0, mid: 1.5, bass: 0, reverb: 0, volume: 0, compress: false, noise: true, chorus: true },
+    nightcore: { pitch: 3, speed: 1.25, high: 2, mid: 0, bass: 2, reverb: 0, volume: 0, compress: true, noise: false, chorus: false },
     slowed: { pitch: -2, speed: 0.8, high: -2, mid: 0, bass: 4, reverb: 0.2, volume: 0, compress: true, noise: false },
     chipmunk: { pitch: 12, speed: 1.1, high: 4, mid: 0, bass: -2, reverb: 0, volume: 0, compress: false, noise: false },
     vaporwave: { pitch: -4, speed: 0.75, high: -4, mid: -2, bass: 5, reverb: 0.8, volume: 0, compress: true, noise: false },
@@ -109,12 +109,14 @@ async function initAudio() {
     await Tone.start();
     
     masterEq = new Tone.EQ3(0, 0, 0);
+    masterChorus = new Tone.Chorus(2, 2.5, 0.4).start(); // Rate: 2Hz, Delay: 2.5ms, Depth: 0.4
+    masterChorus.wet.value = 0;
     masterCompressor = new Tone.Compressor({ ratio: 4, threshold: 0, release: 0.25, attack: 0.003, knee: 30 });
     masterReverb = new Tone.Reverb(2.5);
     masterVol = new Tone.Volume(0);
     masterLimiter = new Tone.Limiter(-0.5).toDestination();
     
-    masterEq.chain(masterCompressor, masterReverb, masterVol, masterLimiter);
+    masterEq.chain(masterChorus, masterCompressor, masterReverb, masterVol, masterLimiter);
     
     // Subtle Noise Layer for Anti-Copyright
     masterNoise = new Tone.Noise("brown");
@@ -579,6 +581,11 @@ function applySettings(settings) {
         masterNoiseVol.volume.value = settings.noise ? -45 : -Infinity;
     }
     
+    // Chorus Effect for Anti-Copyright
+    if (masterChorus) {
+        masterChorus.wet.value = settings.chorus ? 0.35 : 0;
+    }
+    
     tracks.forEach(t => {
         t.player.playbackRate = settings.speed;
         t.trackPitch.pitch = parseFloat(settings.pitch) + t.pitch;
@@ -686,12 +693,14 @@ async function renderOffline() {
     return await Tone.Offline(async ({ context, transport }) => {
         
         const offEq = new Tone.EQ3(parseFloat(sliderBass.value), parseFloat(sliderMid.value), parseFloat(sliderHigh.value));
+        const offChorus = new Tone.Chorus(2, 2.5, 0.4).start();
+        offChorus.wet.value = (presets[currentPreset] && presets[currentPreset].chorus) ? 0.35 : 0;
         const offComp = new Tone.Compressor({ ratio: 4, threshold: (presets[currentPreset] && presets[currentPreset].compress) ? -24 : 0, release: 0.25, attack: 0.003, knee: 30 });
         const offReverb = new Tone.Reverb(2.5);
         const offVol = new Tone.Volume(parseFloat(sliderVolume.value));
         const offLimiter = new Tone.Limiter(-0.5).toDestination();
         
-        offEq.chain(offComp, offReverb, offVol, offLimiter);
+        offEq.chain(offChorus, offComp, offReverb, offVol, offLimiter);
         
         // Anti-Copyright Noise Layer for Render
         const isNoiseActive = presets[currentPreset] && presets[currentPreset].noise;
